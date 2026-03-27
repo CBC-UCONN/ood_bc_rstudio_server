@@ -1,0 +1,18 @@
+---
+batch_connect:
+  template: "basic"
+
+  # Tried setting this globally in /etc/ood/config/clusters.d/mantis.yml v2: batch_connect: basic: but it didn't work
+  set_host: "host=$(hostname -f)"
+
+  # Expose shell variables from before.sh.erb to view.html.erb
+  conn_params:
+    - csrf_token
+
+script:
+  qos: <%= auto_qos %>
+  queue: <%= auto_queues %>
+  native: [
+    "--mem=<%= custom_memory %>",
+    "--cpus-per-task=<%= num_cores %>",
+    <%- if not gres.blank? -%> "--gres=<%= gres %>", <%- end -%>]

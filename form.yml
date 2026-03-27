@@ -1,0 +1,71 @@
+---
+cluster: "mantis"
+
+# TODO: Could set some of these up to be globally available https://osc.github.io/ood-documentation/latest/how-tos/app-development/interactive/form.html#global-batch-connect-form-items
+
+attributes:
+  container_image:
+    widget: "select"
+    label: "Container Image"
+    options:
+    # TODO: Would be nice if it was possibe to toggle required attribute of the custom image field from here. 
+      - [ "Rocker Rstudio - 4.5.3", "/isg/shared/mantis/apps/rstudio-server/rocker-rstudio-4.5.3.sif", data-hide-custom-image: true]
+      - [ "Custom - Input path below", "custom", data-hide-custom-image: false]
+    help:
+      "Select Container Image"
+
+  custom_image:
+    widget: "path_selector"
+    label: "Custom Image Path"
+    popup_title: "Select .sif/.simg container image file"
+    help:
+      "Provide path to a custom .sif/.simg container image"
+
+  custom_environment:
+    widget: "text_area"
+    label: "R Environment Configuration"
+  
+  bc_num_hours:
+    widget: "number_field"
+    label: "Hours"
+    help: "The number of hours to request for the Jupyter Lab session."
+    value: 1
+    max: 12
+
+  custom_memory: 
+    widget: "text_field"
+    label: "Memory per Node"
+    pattern: "^[0-9]+(GB|MB)$"
+    help: "The amount of memory to request per node (e.g. 1GB, 100MB)."
+    value: "4GB"
+
+  num_cores:
+    widget: "number_field"
+    label: "Number of Cores"
+    help: "The number of CPU cores to request for the Jupyter Lab session."
+    value: 1
+  
+  gres:
+    widget: "text_field"
+    label: "GRES options"
+    help: "Specify any generic resources to request (e.g. GPUs). Leave blank if not needed."
+    value: ""
+  
+  auto_queues:
+    label: "Partitions"
+    value: "general"
+  
+  auto_qos:
+    label: "Quality of Service"
+    value: "general"
+
+form:
+  - container_image
+  - custom_image
+  - custom_environment
+  - bc_num_hours
+  - custom_memory
+  - num_cores
+  - gres
+  - auto_queues
+  - auto_qos

@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+<%- if context.container_image == "custom" -%>
+  <%- if context.custom_image.to_s.strip.empty? -%>
+    echo "ERROR: You selected custom image but did not provide a path." >&2
+    exit 1
+  <%- end -%>
+  <%- image_path = context.custom_image -%>
+<%- else -%>
+  <%- image_path = context.container_image -%>
+<%- end -%>
+
+module load apptainer
+
+export RSTUDIO_AUTH=$PWD/bin/auth
+
+
+# Generate an rsession wrapper script
+export RSTUDIO_RSESSION=$PWD/rsession.sh
+(
+umask 077
+sed 's/^ \{2\}//' > "${RSTUDIO_RSESSION}" << EOL
+  #!/bin/bash -l
+
+  export RSESSION_LOG="${PWD}/rsession.log"
+  exec &>>"\${RSESSION_LOG}"
+
+  <%= context.custom_environment.gsub(/\r\n?/, "\n") %>
+
+  echo "Launching rsession..."
+  set -x
+  exec /usr/lib/rstudio-server/bin/rsession "\${@}"
+EOL
+)
+chmod 700 "${RSTUDIO_RSESSION}"
+
+
+cd $HOME
+set -x
+
+apptainer exec \
+  --scratch /run,/tmp,/var/lib/rstudio-server \
+  <%= image_path %> \
+  rserver \
+    --www-port=$port \
+    --server-user=$(whoami) \
+    --auth-pam-helper-path=$RSTUDIO_AUTH \
+    --auth-none=0 \
+    --auth-encrypt-password=0 \
+    --auth-timeout-minutes=0 \
+    --auth-stay-signed-in-days=30 \
+    --rsession-path=$RSTUDIO_RSESSION
