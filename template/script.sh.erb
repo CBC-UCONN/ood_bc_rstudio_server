@@ -13,10 +13,13 @@ if image_path.empty?
 end
 %>
 
+
 module load apptainer
 
 export RSTUDIO_AUTH=$PWD/bin/auth
 export RSTUDIO_RSESSION=$PWD/rsession.sh
+
+<%= context.custom_environment.gsub(/\r\n?/, "\n") %>
 
 # Generate an rsession wrapper script
 (
