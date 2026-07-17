@@ -1,7 +1,6 @@
 ---
 name: RStudio Server - Beta v1
 category: Interactive Apps
-subcategory: Web Apps
 role: batch_connect
 description: |
   This app will launch a RStudio server.
