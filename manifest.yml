@@ -1,6 +1,6 @@
 ---
-name: RStudio Server - Beta v1
+name: RStudio Server - Beta v2
 category: Interactive Apps
 role: batch_connect
 description: |
-  This app will launch RStudio server.
+  This app will launch RStudio server. Beta Version 2 actually allows use of GPUs and changes default behavior for session management. Beta Version 1 is still available in the interactive apps menu.

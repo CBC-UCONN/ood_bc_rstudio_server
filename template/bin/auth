@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 
 # Custom PAM helper for RStudio Server.
-#
-# RStudio calls this script as: auth USERNAME
-# It reads the password from stdin (with a "Password: " prompt).
-# We compare it against $RSTUDIO_PASSWORD, which was set in before.sh.erb
-# and is auto-submitted by view.html.erb -- so the user never sees a prompt.
 
 if [[ $# -lt 1 ]]; then
   echo "Usage: auth USERNAME"

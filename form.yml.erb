@@ -19,9 +19,6 @@ attributes:
     popup_title: "Select .sif/.simg container image file"
     help:
       "Provide path to a custom .sif/.simg container image"
-  custom_environment:
-    widget: "text_area"
-    label: "R Environment Configuration"
   
   bc_num_hours:
     widget: "number_field"
@@ -57,7 +54,6 @@ attributes:
 form:
   - container_image
   - custom_image
-  - custom_environment
   - bc_num_hours
   - custom_memory
   - num_cores

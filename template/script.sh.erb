@@ -13,45 +13,58 @@ if image_path.empty?
 end
 %>
 
-hostname
+echo "Running on: $(hostname)"
+echo "Using container image: <%= image_path %>"
 
 module load apptainer
 
-export RSTUDIO_AUTH=$PWD/bin/auth
-export RSTUDIO_RSESSION=$PWD/rsession.sh
+# Create Config File
+cat <<-EOF >./rserver.conf
+	server-user=$(whoami)
+  www-port=${port}
+	auth-none=0
+	auth-pam-helper-path=${PWD}/bin/auth
+	auth-encrypt-password=0
+	auth-timeout-minutes=0
+	server-app-armor-enabled=0
+EOF
 
-<%= context.custom_environment.gsub(/\r\n?/, "\n") %>
+# Create Session Config File
+cat <<-EOF >./rsession.conf
+	session-timeout-minutes=0
+	session-save-action-default=no
+EOF
 
-# Generate an rsession wrapper script
-(
-umask 077
-sed 's/^ \{2\}//' > "${RSTUDIO_RSESSION}" << EOL
-  #!/bin/bash -l
+# Create Log Config File (debug, info, warn, error)
+cat <<-EOF >./logging.conf
+	[*]
+	log-level=info
+	logger-type=file
+	log-dir=$PWD/sessions
+EOF
 
-  export RSESSION_LOG="${PWD}/rsession.log"
-  exec &>>"\${RSESSION_LOG}"
-
-  <%= context.custom_environment.gsub(/\r\n?/, "\n") %>
-
-  echo "Launching rsession..."
-  set -x
-  exec /usr/lib/rstudio-server/bin/rsession "\${@}"
-EOL
+# Apptainer bind paths
+BIND_PATHS=(
+	"$TMPDIR:/tmp"
+	"$PWD/rserver.conf:/etc/rstudio/rserver.conf"
+	"$PWD/rsession.conf:/etc/rstudio/rsession.conf"
+	"$PWD/logging.conf:/etc/rstudio/logging.conf"
 )
-chmod 700 "${RSTUDIO_RSESSION}"
 
-cd $HOME
-set -x
+# Join bind paths elements by comma
+BIND_PATH="$(IFS=,; printf '%s' "${BIND_PATHS[*]}")"
 
-apptainer exec \
-  --scratch /run,/var/lib/rstudio-server \
-  --bind $TMPDIR:/tmp \
-  <%= image_path %> \
-  rserver \
-    --www-port=$port \
-    --server-user=$(whoami) \
-    --auth-pam-helper-path=$RSTUDIO_AUTH \
-    --auth-none=0 \
-    --auth-encrypt-password=0 \
-    --auth-timeout-minutes=0 \
-    --rsession-path=$RSTUDIO_RSESSION
+# Shared Apptainer arguments for both GPU and non-GPU execution
+APPTAINER_ARGS=(
+	--bind "$BIND_PATH"
+	--scratch /run,/var/lib/rstudio-server
+	"<%= image_path %>"
+)
+
+echo "Starting RStudio Server at: $(date)"
+
+if [ -n "$CUDA_VISIBLE_DEVICES" ]; then
+	apptainer exec --nv "${APPTAINER_ARGS[@]}" rserver
+else
+	apptainer exec "${APPTAINER_ARGS[@]}" rserver
+fi
